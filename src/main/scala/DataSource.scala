@@ -13,7 +13,10 @@ import org.apache.spark.rdd.RDD
 
 import grizzled.slf4j.Logger
 
-case class DataSourceParams(appName: String) extends Params
+case class DataSourceParams(
+  appName: String,
+  eventName: String
+  ) extends Params
 
 class DataSource(val dsp: DataSourceParams)
   extends PDataSource[TrainingData,
@@ -23,12 +26,14 @@ class DataSource(val dsp: DataSourceParams)
 
   override
   def readTraining(sc: SparkContext): TrainingData = {
+
+    val eventNames = dsp.eventName
     
     // get all "user" "buy" "item" events
     val buyEvents: RDD[BuyEvent] = PEventStore.find(
       appName = dsp.appName,
       entityType = Some("user"),
-      eventNames = Some(List("buy")),
+      eventNames = Some(List(eventNames)),
       targetEntityType = Some(Some("item")))(sc)
       .map { event =>
         try {
